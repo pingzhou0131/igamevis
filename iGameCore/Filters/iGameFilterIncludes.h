@@ -28,7 +28,7 @@
 #include "VariableCorrelation/iGameGenerateVariableCorrelationDataFilter.h"
 #include "VariableDensity/iGameGenerateVariableDensityDataFilter.h"
 #include "VolumeMeshAlgorithm/iGameTetraDecimation.h"
-
+#include "GlobalIds/iGameGenerateGlobalIdsFilter.h"
 #include "FeatureExtraction/iGameCurvatureFilter.h"
 #include "FeatureExtraction/iGameGradientFilter.h"
 #include "FeatureExtraction/iGameLaplacianFilter.h"

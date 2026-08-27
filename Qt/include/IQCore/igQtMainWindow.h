@@ -37,6 +37,7 @@ class igQtAiChatWidget;
 class igQtCommandManager;
 class igQtChromeFramelessDialog;
 class igQtPartFocusWidget;
+class igQtGlobalIdWidget;
 
 class IG_QT_MODULE_EXPORT igQtMainWindow : public QMainWindow {
     Q_OBJECT
@@ -104,6 +105,10 @@ public:
     // 零件聚焦弹窗
     igQtChromeFramelessDialog* partFocusDialog{nullptr};
     igQtPartFocusWidget* partFocusWidget{nullptr};
+
+    // 全局 ID 生成与 Local/Global 对照结果
+    QDockWidget* GlobalIdDockWidget{nullptr};
+    igQtGlobalIdWidget* GlobalIdWidget{nullptr};
 
 private slots:
     void updateRecentFilePaths();

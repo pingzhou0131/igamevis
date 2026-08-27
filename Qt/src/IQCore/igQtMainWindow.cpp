@@ -41,6 +41,7 @@
 #include <IQWidgets/igQtAiChat/igQtCommandManager.h>
 #include <IQWidgets/igQtCharts.h>
 #include <IQWidgets/igQtDeformationWidget.h>
+#include <IQWidgets/igQtGlobalIdWidget.h>
 #include <IQWidgets/igQtModelClipWidget.h>
 #include <IQWidgets/igQtModelDrawWidget.h>
 #include <IQWidgets/igQtModelInformationWidget.h>
@@ -711,6 +712,15 @@ void igQtMainWindow::initAllUnDefinedComponents() {
 
     modelTreeWidget = new igQtModelDialogWidget(this);
 
+    GlobalIdDockWidget = igQtGlobalIdWidget::createDockWidget(this);
+    GlobalIdWidget = qobject_cast<igQtGlobalIdWidget*>(GlobalIdDockWidget->widget());
+    this->addDockWidget(Qt::RightDockWidgetArea, GlobalIdDockWidget);
+    GlobalIdDockWidget->resize(400, 600);
+    GlobalIdDockWidget->hide();
+    connect(GlobalIdWidget, &igQtGlobalIdWidget::cancelRequested, GlobalIdDockWidget, &QDockWidget::hide);
+    connect(GlobalIdDockWidget, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+        if (!visible && GlobalIdWidget) GlobalIdWidget->resetOffsets();
+    });
     auto makeWidgetScrollable = [&](QWidget* content, QWidget* parent) -> QWidget* {
         if (!content) return nullptr;
         if (qobject_cast<QScrollArea*>(content)) return content;
@@ -1167,6 +1177,24 @@ void igQtMainWindow::showDarkFramelessMessage(const QString& title, const QStrin
 }
 
 void igQtMainWindow::initAllFilters() {
+    connect(ui->action_GlobalIds, &QAction::triggered, this, [this]() {
+        auto model = rendererWidget->GetScene()->GetCurrentModel();
+        if (!model) {
+            showDarkFramelessMessage(QStringLiteral("全局ID"), QStringLiteral("请先选择一个模型。"));
+            return;
+        }
+        GlobalIdWidget->setCurrentModel(model);
+        GlobalIdDockWidget->show();
+        GlobalIdDockWidget->raise();
+        GlobalIdWidget->setFocus(Qt::OtherFocusReason);
+    });
+    connect(modelTreeWidget, &igQtModelDialogWidget::CurrendModelChanged, this, [this]() {
+        if (!GlobalIdDockWidget || !GlobalIdDockWidget->isVisible()) return;
+        QTimer::singleShot(0, this, [this]() {
+            GlobalIdWidget->setCurrentModel(rendererWidget->GetScene()->GetCurrentModel());
+        });
+    });
+
     /* Data Processing 前两档：加宽以容纳较长参数标签，并关闭参数区滚动条（内容较少无需滚动） */
     auto tuneMeshSimplifyFilterDialog = [](igQtFilterDialogDockWidget* d) {
         constexpr int kDialogWidth = 360;

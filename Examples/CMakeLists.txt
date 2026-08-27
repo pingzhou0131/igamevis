@@ -304,6 +304,12 @@ if (ENABLE_LIBTORCH_MODULE)
     endif ()
 endif ()
 
+# Global IDs
+igame_add_example(
+    testGenerateGlobalIds
+    Filter/GlobalIds/TestGenerateGlobalIds.cpp
+)
+
 get_property(IGAME_EXAMPLE_TARGETS DIRECTORY PROPERTY IGAME_EXAMPLE_TARGETS)
 if (NOT IGAME_EXAMPLE_TARGETS)
     set(IGAME_EXAMPLE_TARGETS "")

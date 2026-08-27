@@ -1008,6 +1008,7 @@ QLabel#CustomTitleLabel {
     <property name="title">
      <string>算法处理</string>
     </property>
+    <addaction name="action_GlobalIds"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
@@ -1578,6 +1579,11 @@ QLabel#CustomTitleLabel {
   <action name="action_SearchInfo">
    <property name="text">
     <string>查找数据</string>
+   </property>
+  </action>
+  <action name="action_GlobalIds">
+   <property name="text">
+    <string>全局ID</string>
    </property>
   </action>
   <action name="action_AiChat">
