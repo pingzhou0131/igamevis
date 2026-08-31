@@ -49,8 +49,8 @@ if (WIN32)
             "-DIGAME_ABQ_RUNTIME_DIR=${AbqSDK_DLL_DIR}"
             "-DIGAME_ABQ_RUNTIME_LIBRARY_NAMES=${_IGAME_EXAMPLE_ABQ_RUNTIME_NAMES}"
             "-DIGAME_HDF5_RUNTIME_FILE=${_IGAME_EXAMPLE_HDF5_RUNTIME}"
-            "-DIGAME_GPS_RUNTIME_DIR=${CMAKE_SOURCE_DIR}/CMakeGPS/CMakeGPS/ReferenceDLL"
-            -P "${CMAKE_SOURCE_DIR}/Cmake/DeployExampleRuntime.cmake"
+            "-DIGAME_GPS_RUNTIME_DIR=${CMAKE_CURRENT_SOURCE_DIR}/../CMakeGPS/CMakeGPS/ReferenceDLL"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/../Cmake/DeployExampleRuntime.cmake"
         COMMENT "Deploying runtime DLLs for Examples"
         VERBATIM)
 else ()
@@ -169,7 +169,19 @@ function(igame_register_example_test EXAMPLE_TARGET)
         set(_TEST_COMMAND bash "${_TEST_SCRIPT}" "$<TARGET_FILE:${EXAMPLE_TARGET}>" 120 -- Models/Quad_Plane_Tensor.vtk)
     endif ()
 
-    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if (WIN32)
+        # Windows may resolve `bash` to WSL, which cannot execute D:/ paths.
+        # CTest already enforces the timeout below, so run the executable directly.
+        set(_TEST_COMMAND "$<TARGET_FILE:${EXAMPLE_TARGET}>")
+        if ("${EXAMPLE_TARGET}" STREQUAL "testLosslessEncode")
+            set(_TEST_COMMAND "$<TARGET_FILE:${EXAMPLE_TARGET}>" Models/Quad_Plane_Tensor.vtk)
+        endif ()
+        add_test(
+            NAME ${EXAMPLE_TARGET}
+            COMMAND ${_TEST_COMMAND}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+    elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         add_test(
             NAME ${EXAMPLE_TARGET}
             COMMAND xvfb-run -a ${_TEST_COMMAND}
@@ -203,6 +215,7 @@ igame_add_example(testSetRenderingPressure Rendering/SetRenderingPressure.cpp)
 
 # Attribute
 igame_add_example(testChangeRange Attribute/TestSubDataRangeChangeAndRecollect.cpp)
+igame_add_example(testPointCoordinates Filter/PointCoordinates/TestPointCoordinates.cpp)
 
 # Vector / Tensor
 igame_add_example(testVector Filter/Vector/TestVector.cpp)
@@ -230,6 +243,10 @@ igame_add_example(testGetClosestCellsInLine Filter/Selection/TestGetClosestCells
 igame_add_example(testGetPointsInFrustum Filter/Selection/TestGetPointsInFrustum.cpp)
 igame_add_example(testGetCellsInFrustum Filter/Selection/TestGetCellsInFrustum.cpp)
 
+# Data processing
+igame_add_example(testOverlappingCellsDetector
+    Filter/DataProcessing/OverlappingCellsDetector/TestOverlappingCellsDetector.cpp)
+
 # Compression
 igame_add_example(testDecoder Filter/Compression/TestDecoder.cpp)
 igame_add_example(testEncoder Filter/Compression/TestEncoder.cpp)
@@ -243,8 +260,15 @@ igame_add_example(testConvertToVolumeMesh Filter/Convert/TestConvertToVolumeMesh
 igame_add_example(testConvertToSurfaceMesh Filter/Convert/TestConvertToSurfaceMesh.cpp)
 igame_add_example(testConvertToLagrangeUnstructuredMesh Filter/Convert/TestConvertToLagrangeUnstructuredMesh.cpp)
 
+# My Filters
+igame_add_example(testExtractCellsByType Filter/MyFilter/TestExtractCellsByType.cpp)
+igame_add_example(testCellCenterFilter Filter/MyFilter/TestCellCenterFilter.cpp)
+
 # IO (optional modules)
 igame_add_example(testSplineReaderCPU IO/SplineReaderCPU.cpp)
+
+#Data Processing
+igame_add_example(testVolumeMeshSimplification Filter/TestVolumeMeshSimplification.cpp)
 
 if (ENABLE_CGNS_MODULE)
     igame_add_example(testCGNS IO/CGNSReader.cpp)
@@ -271,6 +295,8 @@ igame_add_example(testAnsysRSTReader IO/AnsysRSTReader.cpp)
 igame_add_example(testAnsysRTHReader IO/AnsysRTHReader.cpp)
 
 # Animation / Filters
+igame_add_example(testPassArray Filter/PassArrays/TestPassArrays.cpp)
+
 igame_add_example(testAnimation Animation/TestAnimation.cpp)
 
 if (FFMPEG_FOUND)
@@ -280,9 +306,16 @@ endif ()
 
 igame_add_example(testClip Filter/TestClip.cpp)
 igame_add_example(testSlice Filter/TestSlice.cpp)
+igame_add_example(testIsoVolume Filter/TestIsoVolume.cpp)
 igame_add_example(testDeformation Filter/Deformation/TestStressDeformationFilter.cpp)
 igame_add_example(testDeformationCode Filter/Deformation/TestStressDeformationFilterCode.cpp)
 igame_add_example(testContourLine Filter/TestContourLine.cpp)
+igame_add_example(testGenerateProcessIds Filter/TestGenerateProcessIds.cpp)
+igame_add_example(testGhostDemo Filter/GhostCell/TestGhostDemo.cpp)
+igame_add_example(testBoundaryMeshQuality Filter/TestBoundaryMeshQuality.cpp)
+
+# Probe
+igame_add_example(testProbe Filter/Probe/TestProbe.cpp)
 
 # Color bar / interaction
 igame_add_example(testChangeColorRange ColorBar/ChangeColorRange.cpp)
@@ -294,6 +327,20 @@ igame_add_example(testVortexExtraction Filter/FeatureExtraction/VortexExtraction
 igame_add_example(testCurvatureExtraction Filter/FeatureExtraction/CurvatureExtraction.cpp)
 igame_add_example(testGradientExtraction Filter/FeatureExtraction/GradientExtraction.cpp)
 igame_add_example(testLaplacianExtraction Filter/FeatureExtraction/LaplacianExtraction.cpp)
+igame_add_example(testOutlineCorners Filter/FeatureExtraction/OutlineCorners.cpp)
+igame_add_example(testCellSizeExtraction Filter/FeatureExtraction/CellSizeExtraction.cpp)
+
+# Feature edges console test
+igame_add_example(
+    testFeatureEdges
+    Filter/FeatureExtraction/FeatureEdges.cpp
+)
+
+# Feature edges GUI visualization
+igame_add_example(
+    testFeatureEdgesVisualization
+    Filter/FeatureExtraction/FeatureEdgesVisualization.cpp
+)
 
 if (ENABLE_LIBTORCH_MODULE)
     igame_add_example(testVortexDetection Filter/FeatureExtraction/VortexDetection.cpp)
@@ -303,6 +350,12 @@ if (ENABLE_LIBTORCH_MODULE)
         target_link_libraries(testVortexDetection PRIVATE OpenMP::OpenMP_CXX)
     endif ()
 endif ()
+
+# Global IDs
+igame_add_example(
+    testGenerateGlobalIds
+    Filter/GlobalIds/TestGenerateGlobalIds.cpp
+)
 
 get_property(IGAME_EXAMPLE_TARGETS DIRECTORY PROPERTY IGAME_EXAMPLE_TARGETS)
 if (NOT IGAME_EXAMPLE_TARGETS)
